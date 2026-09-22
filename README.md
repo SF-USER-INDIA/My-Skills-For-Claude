@@ -99,3 +99,85 @@ Only one skill is normally active at a time per persona (UX reviewer vs. enginee
 | Conceptual tools | Not enumerated separately | 12 named tools (Context Collector, Architect, Debugger, Optimizer, etc.) |
 
 Both skills share the same core philosophy: **clarity over speed, reuse over rebuilding, small safe steps over large risky changes, verified knowledge over guessing, minimal code over bloat, and user approval before moving forward.**
+
+---
+
+## Token Usage & Cost Guide
+
+Every skill affects your token/credit spend in **two different ways**, and it's worth separating them:
+
+1. **Loading cost (one-time, per session):** the skill's own `SKILL.md` text has to enter Claude's context before it can act on it. A bigger file = more input tokens spent just activating the skill.
+2. **Behavioral cost (ongoing, every turn):** once active, a skill's rules shape how verbose Claude's *outputs* are for the rest of the session — full-file rewrites vs. small patches, five-paragraph explanations vs. two sentences, one big answer vs. a checkpoint-and-approve loop.
+
+A skill can be "expensive" on one axis and "cheap" on the other. The two engineering skills below are explicitly engineered to be cheap on axis 2 even when they're not cheap on axis 1.
+
+### 1. Loading cost — what it costs to activate each skill
+
+Estimated using the common ~4 characters ≈ 1 token heuristic. Actual token counts depend on the model's tokenizer and will vary — treat these as relative, not exact.
+
+| Skill | Lines | Words | Characters | Approx. tokens to load | Relative loading cost |
+|---|---:|---:|---:|---:|---|
+| `senior-engineer-core` | 752 | 2,528 | 16,272 | **~4,100** | 🟢 Low |
+| `god-level-ux-designer-reviewer` | 330 | 3,029 | 21,983 | **~5,500** | 🟡 Medium |
+| `senior-engineer-workflow-complete` | 3,088 | 9,687 | 60,135 | **~15,000** | 🔴 High |
+
+```text
+Relative one-time loading cost (longer bar = more tokens spent just to activate the skill)
+
+senior-engineer-core               ████████                     (~4.1k tokens)
+god-level-ux-designer-reviewer     ███████████                  (~5.5k tokens)
+senior-engineer-workflow-complete  ██████████████████████████████ (~15.0k tokens)
+```
+
+**Takeaway:** `senior-engineer-workflow-complete` costs roughly **3.7× more to load** than `senior-engineer-core` for essentially the same behavior, just spelled out in more detail. That cost is paid once when the skill enters context (and again each time context resets/compacts), so it matters most on short sessions and matters least on long ones where it's amortized across many turns.
+
+### 2. Behavioral cost — which skills actively reduce your ongoing spend
+
+| Skill | Has explicit token/credit economy rules? | Governs response size? | Governs question volume? |
+|---|---|---|---|
+| `senior-engineer-core` | ✅ Yes — dedicated "Token and Credit Economy" section | ✅ Yes (Lite/Full/Ultra caps) | ✅ Yes (1–5 questions, batched) |
+| `senior-engineer-workflow-complete` | ✅ Yes — same rules, more exhaustively stated | ✅ Yes (Lite/Full/Ultra caps) | ✅ Yes (1–5 questions, batched) |
+| `god-level-ux-designer-reviewer` | ❌ No dedicated economy rules | ⚠️ Partial — structured, non-repetitive format, but optimized for thoroughness, not brevity | ⚠️ Partial — "ask 1-3 targeted questions" only when intent is unclear |
+
+The two senior-engineer skills are the ones purpose-built to save tokens and credits. The UX skill is purpose-built for **depth and defensibility** — it will spend more tokens per response by design because a severity-rated, cited audit is inherently longer than a one-line opinion. That's a deliberate trade-off, not an oversight.
+
+### 3. The specific token-saving mechanisms (senior-engineer skills)
+
+| Mechanism | What it actually does | Where it saves tokens/credits |
+|---|---|---|
+| **Patch over full-file rewrite** | Claude outputs only the changed section/diff, not the whole file, when a small change is enough | Output tokens on every code edit |
+| **Pre-flight size check** | Before a large response, Claude asks you to choose the format first (see prompt below) | Avoids paying for a full answer you didn't want |
+| **Question batching (1–5, max)** | Clarifying questions are grouped into one numbered list instead of asked one at a time across turns | Fewer round-trips = fewer repeated context reloads |
+| **No repeated explanations** | Claude is told not to re-explain the same concept multiple times in one session | Output tokens across a long session |
+| **Scope lock (screen/layer/task)** | Claude works on only the current screen/layer/bug, never generates future screens speculatively | Prevents paying for code you don't need yet or may throw away |
+| **Reuse-first rule** | Existing components/libraries/files are reused and adapted instead of rebuilt from scratch | Output tokens + avoids duplicate logic to maintain later |
+| **Anti-bloat rules** | No speculative features, no premature abstractions, no unused dependencies/files | Output tokens now, and maintenance/rework cost later |
+| **"Don't guess" rule** | Claude states uncertainty instead of generating plausible-sounding wrong code | Avoids wasted tokens on code that has to be debugged and regenerated |
+| **Lite / Full / Ultra modes** | Lets you explicitly dial response depth up or down per task | Full control over the cost-vs-thoroughness trade-off per request |
+
+The pre-flight size check is the most direct lever — it looks like this in practice:
+
+```text
+This answer may be large. Do you want:
+1. Full code
+2. Only the changed section
+3. A step-by-step patch
+4. A summary first
+```
+
+### 4. Practical guidance: which skill for which budget
+
+| Scenario | Recommended skill | Cost reasoning |
+|---|---|---|
+| Quick one-off bug fix or tiny UI tweak | `senior-engineer-core` in **Lite mode** | Lowest loading cost + tightest output cap (0–2 questions, minimal code) |
+| Normal feature/screen build, single session | `senior-engineer-core` in **Full mode** | Loading cost stays low; balanced plan-then-implement loop avoids rework |
+| Long-running, multi-day, or production/security-critical build | `senior-engineer-workflow-complete` in **Full or Ultra mode** | Higher loading cost is amortized across many turns; the extra discipline (12-step debug workflow, full research strategy, stricter safety rules) reduces expensive rework and production incidents |
+| You're a complete beginner and want every step spelled out | `senior-engineer-workflow-complete` | The larger loading cost buys clearer guardrails while you're still learning the ropes |
+| Pre-launch design/UX audit | `god-level-ux-designer-reviewer` | Not optimized for token economy — optimized to catch severity-4 issues (accessibility blockers, dark patterns) *before* they become expensive to fix in production |
+| Rapid UX sanity check, not a full audit | `god-level-ux-designer-reviewer`, but explicitly ask for a short answer | The skill has no built-in size cap, so you need to request brevity yourself |
+
+### 5. Rule of thumb
+
+> **Short session → pick the smaller skill file.** **Long or high-stakes session → the bigger file's one-time loading cost stops mattering, and its extra guardrails start paying for themselves.**
+
+None of these numbers are exact API/credit pricing — actual cost depends on your Claude plan, the model in use, and Anthropic's current pricing. Use this guide to compare skills *relative to each other*, not to predict a dollar amount.

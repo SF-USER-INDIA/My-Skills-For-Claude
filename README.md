@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/banner.svg" alt="My Skills For Claude" width="100%">
+</p>
+
 # My Skills For Claude
 
 A collection of custom [Claude](https://claude.ai) / [Claude Code](https://claude.com/claude-code) skills. Each skill lives in its own folder under `skills/` as a `SKILL.md` file with YAML frontmatter (`name`, `description`) followed by the full instruction set Claude should follow when the skill is active.
@@ -247,6 +251,8 @@ Being honest about the limits matters as much as the benefits:
 My-Skills-For-Claude/
 ├── README.md                                   ← you are here
 ├── LICENSE
+├── assets/
+│   └── banner.svg                              (README banner)
 └── skills/
     ├── god-level-ux-designer-reviewer/
     │   └── SKILL.md                             (~5.5k tokens to load)

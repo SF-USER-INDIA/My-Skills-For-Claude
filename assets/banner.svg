@@ -1,0 +1,59 @@
+<svg width="1280" height="300" viewBox="0 0 1280 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="My Skills For Claude">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141413"/>
+      <stop offset="100%" stop-color="#1f1e1c"/>
+    </linearGradient>
+    <radialGradient id="glowOrange" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#d97757" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#d97757" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowBlue" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6a9bcc" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#6a9bcc" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowGreen" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#788c5d" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#788c5d" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="300" fill="url(#bg)"/>
+
+  <circle cx="150" cy="60" r="220" fill="url(#glowOrange)"/>
+  <circle cx="1120" cy="250" r="240" fill="url(#glowBlue)"/>
+  <circle cx="950" cy="40" r="160" fill="url(#glowGreen)"/>
+
+  <g opacity="0.5" stroke="#e8e6dc" stroke-opacity="0.12">
+    <line x1="0" y1="250" x2="1280" y2="250"/>
+    <line x1="0" y1="255" x2="1280" y2="255"/>
+  </g>
+
+  <g transform="translate(64,0)">
+    <rect x="0" y="94" width="6" height="70" rx="3" fill="#d97757"/>
+    <text x="26" y="128" font-family="Poppins, Arial, sans-serif" font-size="46" font-weight="700" fill="#faf9f5">
+      My Skills For Claude
+    </text>
+    <text x="26" y="164" font-family="Lora, Georgia, serif" font-size="19" fill="#b0aea5">
+      Custom Claude &amp; Claude Code skills — UX review, senior-engineering workflows, and more
+    </text>
+
+    <g transform="translate(26,196)" font-family="Poppins, Arial, sans-serif" font-size="13.5" font-weight="600">
+      <g>
+        <rect x="0" y="0" width="302" height="34" rx="17" fill="#2a2a27" stroke="#d97757" stroke-width="1.2"/>
+        <circle cx="20" cy="17" r="5" fill="#d97757"/>
+        <text x="34" y="22" fill="#faf9f5">god-level-ux-designer-reviewer</text>
+      </g>
+      <g transform="translate(316,0)">
+        <rect x="0" y="0" width="216" height="34" rx="17" fill="#2a2a27" stroke="#6a9bcc" stroke-width="1.2"/>
+        <circle cx="20" cy="17" r="5" fill="#6a9bcc"/>
+        <text x="34" y="22" fill="#faf9f5">senior-engineer-core</text>
+      </g>
+      <g transform="translate(546,0)">
+        <rect x="0" y="0" width="330" height="34" rx="17" fill="#2a2a27" stroke="#788c5d" stroke-width="1.2"/>
+        <circle cx="20" cy="17" r="5" fill="#788c5d"/>
+        <text x="34" y="22" fill="#faf9f5">senior-engineer-workflow-complete</text>
+      </g>
+    </g>
+  </g>
+</svg>

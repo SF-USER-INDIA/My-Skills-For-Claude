@@ -181,3 +181,91 @@ This answer may be large. Do you want:
 > **Short session → pick the smaller skill file.** **Long or high-stakes session → the bigger file's one-time loading cost stops mattering, and its extra guardrails start paying for themselves.**
 
 None of these numbers are exact API/credit pricing — actual cost depends on your Claude plan, the model in use, and Anthropic's current pricing. Use this guide to compare skills *relative to each other*, not to predict a dollar amount.
+
+---
+
+## Accuracy: With Skills vs. Without Skills
+
+"Accuracy" here doesn't mean a benchmarked score — nobody has run a controlled eval on these `SKILL.md` files, and this README won't invent numbers that don't exist. What it *does* mean is measurable and checkable: **which specific behaviors each skill forces Claude into, and which failure modes those behaviors are designed to close off**, compared to Claude's default (no-skill) behavior on the same request.
+
+### Baseline: what "without any skill" looks like
+
+By default, Claude is a capable general-purpose assistant, but without a skill constraining it, it tends to:
+
+- Pattern-match a plausible-sounding API call, prop, or config option from training data — usually right, occasionally wrong or outdated, and it won't always flag the uncertainty.
+- Jump toward a fix for a bug based on the error text alone, without a forced reproduce → isolate → root-cause sequence.
+- Give design/UX feedback as general impressions ("this feels cluttered," "nice layout") without tying each point to a checkable rule.
+- Add reasonable-sounding extras (a loading spinner here, a settings toggle there) that weren't asked for, because they seem helpful.
+- Rewrite more of a file than necessary when asked for a small change, since it's not under any explicit patch-first instruction.
+- Rarely state explicit confidence/uncertainty — a guess and a verified fact can read the same way in the output.
+
+None of this makes default Claude "wrong" most of the time — it's just *unconstrained*. These skills convert soft habits most engineers already know into hard, forced steps.
+
+### Accuracy-relevant behavior, side by side
+
+| Dimension | Without any skill (default) | With `senior-engineer-core` / `senior-engineer-workflow-complete` | With `god-level-ux-designer-reviewer` |
+|---|---|---|---|
+| Unfamiliar API / library / framework behavior | May infer a plausible call from training data and present it with the same confidence as a verified one | Must say *"I am not certain about this part. I need to verify it or you can paste the relevant documentation"* instead of inventing it | N/A |
+| Database schema, env vars, config options | May fill gaps with sensible-looking defaults | Explicitly forbidden — *"Claude must not invent APIs, props, methods, configuration options, database fields, environment variables, or package names"* | N/A |
+| Bug fixes | Often pattern-matches straight to a fix from the error text | Forced sequence: reproduce → read full error → classify → isolate → form a hypothesis → gather evidence → find root cause → smallest safe fix → regression test → verify | N/A |
+| Design/UX critique | Subjective impressions, no fixed rubric | N/A | Every critique tied to a named Law of UX, Gestalt principle, heuristic, or WCAG success criterion — Final Rule: *"Cite the principle; admit when it's taste, not law"* |
+| Accessibility | Inconsistent — may or may not come up unprompted | N/A | WCAG 2.2 AA is checked as a fixed baseline on every review (contrast ratios, focus order, target size, keyboard traps, etc. — specific success criteria like 2.4.7, 2.5.8, 3.3.8) |
+| Confidence signaling | Often implicit; guesses and verified facts can read identically | Required to explicitly flag uncertainty rather than hide it | Final Rule: *"Recommend validation with real users; confidence is not evidence"* |
+| Unrequested scope/features | May add reasonable-seeming extras unprompted | Scope-locked to the current screen/layer/task; "phantom features" (dark mode, analytics, admin panels, etc.) explicitly banned unless requested | Persuasion patterns must be truthful; fabricated scarcity/proof is flagged as a severity-4 finding, not silently shipped |
+| Severity/prioritization of findings | Usually flat — no ranking of what's urgent vs. cosmetic | N/A | Fixed 0–4 severity scale on every finding, so "must-fix" is never buried next to "nice-to-have" |
+| Root-cause vs. symptom fixes | No forced distinction | Explicitly required to ask "why did this happen?", use the 5-Whys when useful, and avoid fixes that "hide the problem" | N/A |
+
+### Risk reduction (qualitative, rule-derived — not a benchmark)
+
+These ratings reflect what each skill's rules explicitly *require* or *forbid*, not measured error rates. Treat "Low/Medium/High" as directional, not statistical.
+
+| Risk | Without any skill | With senior-engineer skills | With UX skill |
+|---|---|---|---|
+| Hallucinated API/prop/config/schema | 🟡 Medium | 🟢 Low — must ask instead of guess | — |
+| Invented requirements / phantom features | 🟡 Medium | 🟢 Low — scope-lock + anti-bloat rules | — |
+| Unsubstantiated design opinions | 🔴 High (feedback defaults to taste) | — | 🟢 Low — every claim cited to a named rule |
+| Accessibility gaps missed | 🟡 Medium–🔴 High (often an afterthought) | — | 🟢 Low — WCAG 2.2 AA checked by default |
+| Dark patterns shipped unnoticed | 🟡 Medium–🔴 High | — | 🟢 Low — explicit severity-4 dark-pattern scan |
+| Unnecessarily large/risky rewrites | 🟡 Medium | 🟢 Low — patch-first, no unrelated refactors | — |
+| Symptom fixed, root cause missed | 🟡 Medium–🔴 High | 🟢 Low — forced root-cause workflow before fixing | — |
+| Silent scope creep across a session | 🟡 Medium–🔴 High | 🟢 Low — approval checkpoints between steps | — |
+
+### What these skills can't do
+
+Being honest about the limits matters as much as the benefits:
+
+- **They don't add knowledge.** A skill can force Claude to *say* "I'm not certain," but it can't make Claude certain about something outside its training data or the context you've given it. If you don't paste the documentation it asks for, the uncertainty just becomes visible instead of silently resolved — which is still strictly better, but it's not omniscience.
+- **They don't guarantee compliance.** These are instructions, not code-level constraints — a skill lowers the likelihood of a given failure mode, it doesn't make that failure mode impossible.
+- **No benchmarked accuracy numbers exist for these specific files.** Every ratio and severity rating above is a description of what the skill's rules require, not a measured before/after error rate. If you need hard numbers, you'd have to run your own evaluation (Anthropic's [Claude Agent SDK](https://docs.claude.com/) docs cover building evals) on your own workload.
+- **The UX skill trades tokens for rigor, not the other way around.** It will not save you tokens (see the [Token Usage & Cost Guide](#token-usage--cost-guide) above) — its accuracy gain comes specifically from structure and citation requirements, at a higher per-response token cost than an unconstrained "what do you think of this design" answer.
+
+---
+
+## Repository Layout
+
+```text
+My-Skills-For-Claude/
+├── README.md                                   ← you are here
+├── LICENSE
+└── skills/
+    ├── god-level-ux-designer-reviewer/
+    │   └── SKILL.md                             (~5.5k tokens to load)
+    ├── senior-engineer-core/
+    │   └── SKILL.md                             (~4.1k tokens to load)
+    └── senior-engineer-workflow-complete/
+        └── SKILL.md                             (~15.0k tokens to load)
+```
+
+## Quick Reference: All Three Skills at a Glance
+
+| | `god-level-ux-designer-reviewer` | `senior-engineer-core` | `senior-engineer-workflow-complete` |
+|---|---|---|---|
+| **Primary goal** | Cited, severity-rated UX/accessibility rigor | Cheap, disciplined incremental engineering | Same discipline, maximum explicit detail |
+| **Loading cost** | 🟡 Medium (~5.5k tokens) | 🟢 Low (~4.1k tokens) | 🔴 High (~15.0k tokens) |
+| **Built-in token/credit economy rules** | ❌ No | ✅ Yes | ✅ Yes |
+| **Response-size control** | Ask for it explicitly | Lite / Full / Ultra modes | Lite / Full / Ultra modes |
+| **Anti-hallucination rule** | Cite-the-principle / admit-when-it's-taste | Explicit "Don't Guess" rule | Explicit "Don't Guess" + "Anti-Vibe-Coding" rules |
+| **Structured output format** | Severity-rated findings table | Task-specific templates (Bug/Research/Review/etc.) | Same templates + 12 named "conceptual tools" |
+| **Best fit** | Design reviews, accessibility/dark-pattern audits | Fast-moving day-to-day building & fixing | Long, high-stakes, or beginner-guided builds |
+
+**In one line:** pick the UX skill when accuracy means *citable, checkable design judgment*; pick the senior-engineer skills when accuracy means *not guessing, not over-building, and fixing root causes* — and between those two, pick `-core` when you want that discipline cheaply, `-workflow-complete` when you want it spelled out in full.
